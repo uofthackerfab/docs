@@ -1,5 +1,7 @@
 # Custom Tube Furnace Build
 
+![Tube Furnace Photo](../../images/tube-furnace-photo.png)
+
 This outlines the design and build process of our high-temperature tube furnace. The furnace is an essential piece of equipment for our lab, capable of reaching 900°C–1200°C for processes like silicon oxidation and dopant drive-in.
 
 ## Design Constraints
@@ -25,11 +27,18 @@ This outlines the design and build process of our high-temperature tube furnace.
 1. **Enclosure Modification:**
    Modifications to the carbon steel box using metal hole saws/cutters to securely mount the quartz tube, display panels, and power sockets.
 
+   ![Hole for tube](../../images/hole.png)
+
 2. **Chamber & Element Prep:**
    Carefully wind the nichrome wire evenly around the exterior of the quartz tube. Secure the windings in place by applying layers of the refractory cement. Allow to cure fully.
 
+   ![Tube](../../images/tube.png)
+   ![Welding/Glue](../../images/welding_glue.png)
+
 3. **Thermal Insulation:**
    Pack the void between the cemented quartz tube and the steel housing tightly with ceramic fiber blanket and board. This maintains the core temperature while keeping the outer shell safe.
+
+   ![Insulation](../../images/insulation.png)
 
 4. **Electrical & Safety:**
    - **Grounding:** The carbon steel enclosure is firmly bonded to Earth/PE to protect against live wire faults.
@@ -38,3 +47,7 @@ This outlines the design and build process of our high-temperature tube furnace.
 
 5. **PID Controller Tuning:**
    The PID controller uses an SSR to modulate high VAC power based on the Type K thermocouple readings. General process profiles involve ramping to 1000°C at roughly 20°C per minute to prevent quartz stress fracturing, followed by a soak period.
+
+![Final Setup](../../images/final_setup.png)
+
+![Furnace in action](../../images/furnace.gif)
