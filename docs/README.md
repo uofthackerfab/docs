@@ -1,25 +1,25 @@
-# Semiconductor Fabrication Documentation
+# Toronto Hacker Fab Documentation
 
-> Comprehensive guide to semiconductor fabrication techniques and processes.
+Welcome to the internal documentation and SOP repository for the Toronto Hacker Fab. These docs cover our open-source hardware builds and fabrication processes.
 
-## Table of Contents
+## Order to Read the Docs
 
-- [🔬 Patterning and Lithography](patterning-lithography.md)
-- [📥 Deposition Techniques](deposition-techniques.md)
-- [🧪 Etching Techniques](etching-techniques.md)
-- [🛠️ Fabrication Workflow](fabrication-workflow.md)
+If you are new here and going through onboarding, please read the documentation in this order:
 
-## General Notes
+1. **[NMOS Standard Operating Procedure (SOP)](sop/nmos.md)**
+   Understand the step-by-step procedure for fabricating our basic N-type MOSFETs using our current equipment.
 
-### Reference Materials
-- [Equipment Spreadsheet](https://docs.google.com/spreadsheets/d/1x1SKlcFd_YezeLDJ4mFUUFoybHkMIZpcm6by8iPltEY/edit?gid=0#gid=0)
-- [Fabublox Process Editor](https://www.fabublox.com/process-editor/f52fe668-594d-4a94-bfb1-b1e3ce845f38)
+2. **[Tube Furnace Build](projects/tube-furnace/README.md)**
+   Familiarize yourself with the high-temperature furnace used for oxidation and dopant drive-in. Review its components, wiring, and PID settings.
 
-### Lithography Overview
+3. **[Spin Coater Build](projects/spin-coater/README.md)**
+   Learn about our custom Arduino-controlled spin coater used for uniform thin-film spin-on dopant deposition.
 
-Lithography in semiconductor fabrication is a process used to transfer patterns onto a substrate (usually silicon):
+4. **[Lithography Stepper (WIP)](projects/stepper/README.md)**
+   Read the background and current status of our precision optical system for photolithography.
 
-1. **Coating** - Substrate with light-sensitive material called photoresist
-2. **Exposing** - Specific areas to light through a mask to get a desired pattern
-3. **Developing** - The photoresist (removes the exposed areas) or unexposed areas (negative photoresist)
-4. **Processing** - Using patterned photoresist for etching or deposition
+5. **[Sputter Deposition System (WIP)](projects/sputtering/README.md)**
+   Review the principles and design constraints for our upcoming DC Magnetron Sputtering chamber.
+
+## Purpose
+The documents are maintained to eliminate repetitive explanations, maintain consistency across fabrication runs, and centralize our hardware iterations so future groups have a strong foundation to build on.
