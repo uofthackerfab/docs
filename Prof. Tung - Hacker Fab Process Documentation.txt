@@ -1,0 +1,155 @@
+
+
+
+
+
+
+
+Hacker Fab - Toronto 
+NMOS Fabrication Process Documentation
+Toronto Nanofabrication Center 
+
+
+1.0 About Us
+We are a team of third-year Electrical and Computer Engineering students at the University of Toronto who are passionate about building practical, scalable systems using low-level hardware and engineering principles. Our interests aren't limited to theory or hardware application alone but focused on creating the tools and infrastructure that make real-world engineering possible and accessible.
+Inspired by the rise of student-led fabrication spaces across North America, we started Hacker Fab to bring the same energy and capability to the University of Toronto. Our goal is to create an open source, accessible design lab where students can build, prototype, and test semiconductor devices and fabrication workflows without monetary barriers.
+2.0 Purpose
+The University of Toronto's ECE curriculum provides strong theoretical foundations in semiconductor physics and integrated circuit design, allowing students to learn about MOSFETs, lithography, and deposition processes from several advanced courses. However, due to the theoretical and simulation-based nature of these courses, most students lack the physical intuition and understanding of how this theory translates into state-of-art semiconductor devices.
+Hacker Fab isn't just a technical endeavor, it's a community-driven educational project. We aim to fill this gap by providing future students with an open, low-cost and educational lab to foster a hands-on learning experience. Hacker Fab aims to develop engineers who are technically adept at both device design and physical implementation. We plan to run:
+	•	Hands-on workshops teaching fundamental fabrication procedures such as oxidation, photolithography, sputtering, and etching.
+	•	Design-to-fabrication projects where students take a circuit concept all the way to physical implementation.
+	•	Open lab hours where experienced members can mentor newer students.
+	•	Semiconductor series bringing together passionate students, faculty, and industry professionals to push the field of open-source semiconductor devices and fabrication forward.
+3.0 Problem Statement
+The goal of this project is to design, fabricate and study the electrical behavior of a N-type MOSFET using simplified, DIY-inspired semiconductor fabrication techniques. We aim to use Sam Zeloof’s NMOS fabrication [1] procedure as a standard framework, with improvements aimed to streamline the process, improve reliability and bridge the gap between theory and real-life reproducibility.
+
+4.0 Bill of Materials
+
+Item
+Purpose/Notes
+Planned Acquisition Of Item
+Silicon wafer, p-type, (100) orientation
+Substrate for device
+Already bought
+Quartz wafer carrier / boat
+For loading into furnace for oxidation
+Buy
+DI water (rinse)
+Water rinse baths after HF etching
+Buy
+N₂ gun / spin rinse dryer
+Drying after HF etching
+Buy
+Vinyl mask/electrical tape
+Gate region etch protection
+Buy
+Hydroflouric Acid
+Silicon dioxide etchant
+Source from TNFC
+Phosphorus-containing dopant solution
+N-type dopant source 
+Source from TNFC
+Phosphoric acid (with modifications)
+Alternative phosphorus dopant
+Source from TNFC
+Tube furnace
+Oxidation to grow field oxide and gate oxide 
+Already built
+Spin coater
+Apply Spin-on dopant
+Already built
+Solder or silver conductive epoxy
+Create the electrodes
+Buy / Borrow
+Probe station (Oscilloscope, Multimeter, wires, probes, etc.)
+To measure electrical behaviour of fabricated MOSFET
+Buy / Borrow
+
+5.0 Detailed Step-by-Step Process Overview
+5.1 Field Oxide Growth
+
+Purpose: Create an insulating silicon dioxide layer that serves as the dielectric layer that will later be selectively opened to define active areas.
+Description: Perform thermal oxidation using the tube furnace to grow a thin silicon dioxide layer that can be patterned and etched.
+Notes: The wafer was heated for 2.5 hours at about 1000°C with steam being pumped through it to achieve the desired thickness [1]. The wafer had a blueish tint color to it which indicates about 500nm of thickness as per the image below.
+
+Silicon Dioxide (SiO₂) Thin-Film Interference Color vs. Oxide Thickness
+5.2 Vinyl Masking and HF Etching
+
+Purpose: Protect the gate region by using a vinyl mask and etch it to remove the field oxide from the source and drain areas to expose silicon for doping while maintaining insulation elsewhere.
+Description: First, the wafer is cleaved into smaller rectangular pieces [1]. A vinyl mask is then used to protect the gate region. Oxide is removed from the exposed regions, which form the source and the drain, using 2% HF etching (dip for a couple of minutes), followed by rinsing to eliminate chemical contamination. Successful etching can be clearly validated through visual inspection (source and drain regions should not have blue tint anymore).
+Notes: The width of the vinyl mask covering the middle determines the width of the gate. You can heat the HF solution a bit because the process is endothermic and will take place faster. It is recommended to use two water baths (second should have a higher level to rinse off any HF that may be present) and dry it off with nitrogen gas if available.
+5.3 Dopant Diffusion Preparation
+
+Purpose: Prepare exposed silicon regions for uniform deposition of a phosphorus-containing spin-on dopant film, creating a controllable dopant source layer prior to diffusion (n-well / source-drain region formation).
+Description: First, perform surface preparation steps to promote wetting and uniform film coverage on exposed silicon using RCA. Then, spin-coat phosphorus spin-on dopant directly on top of the device at 3000+ RPM for about 30 seconds. Very quickly, place the device onto a hotplate, preheated to 115°C, and turn up the temperature to 220°C, to remove solvents and form a dopant-bearing glassy layer (PSG-like in effect) prior to diffusion. The amount of time left on the hotplate should be adjusted and documented, but should be around 15 minutes [1].
+Notes:  It is important to prepare the surface to avoid beading/poor coverage (opposite of photoresist behavior). Sam uses a commercial phosphorus spin-on dopant and notes storage/handling affects film quality. You should aggressively clean using RCA - briefly dip into acid for cleaning - to create a hydrophilic surface, since proper dopant coating is very important for transistor functionality.
+
+5.4 Generation Of Diffusion Wells
+
+Purpose: Diffuse phosphorus into the opened silicon regions to form n-type wells (n+ source/drain regions) in the p-type substrate, creating two pn junctions that enable NMOS operation.
+Description:
+	•	Load the dopant-coated coupon into the furnace for diffusion/drive-in under controlled ambient.
+	•	Perform a thermal cycle to drive dopant into silicon and activate it electrically.
+	•	15 minutes with steam
+	•	30 minutes without steam
+	•	Allow a thin oxide to form during/after diffusion as applicable, then document the resulting surface condition.
+Notes: Controlling ambient (nitrogen-rich / oxygen content) and mentions moisture to grow thin oxide for later contact definition. Diffusing the dopant will also add a layer of silicon dioxide on top of the wells.
+
+5.5 Etch Gate Oxide
+
+Purpose: Protect the non-gate regions by using a vinyl mask and etch it to remove the field oxide from the source and drain areas to expose silicon for doping while maintaining insulation elsewhere.
+Description: Same description as 5.2’s etching step.
+Notes: Same notes as 5.2’s etching step.
+
+
+5.6 Source and Drain Formation
+
+Purpose: Form heavily doped n⁺ regions in the p-type silicon to act as the source and drain. These regions must create proper pn junctions with the substrate and provide low resistivity between the source and the drain.
+Description: 
+After thermal oxide growth:
+	•	Cover the middle of the oxide using a vinyl mask and etch the device HF to uncover the drain and source regions of the device.
+	•	Apply a phosphorus dopant source (e.g. spin-on dopant).
+	•	Soft bake to remove solvents and form the dopant film using a hot plate.
+	•	Perform high-temperature diffusion (~900–1000°C) in a tube furnace to drive phosphorus into the exposed silicon.
+	•	Remove the resulting phosphosilicate glass using HF.
+This creates n⁺ source region, n⁺ drain region, and p-type substrate forming pn junctions beneath each diffusion. 
+Notes: This etching step follows the same notes as 5.2.
+
+5.7 Contact Formation
+
+Purpose: Create electrical access points to the source, drain, gate, and body by opening vias through oxide and depositing metal contacts.
+Description: Contact windows are first defined using a vinyl mask or photoresist, and the silicon dioxide is etched in buffered HF to expose the source, drain, and gate contact regions. Once the oxide has been removed where electrical access is required, aluminum is deposited using thermal evaporation to ensure good coverage over the exposed silicon surfaces. After deposition, the aluminum layer is patterned using a wet etch process to define separate metal contacts and large probing pads for the gate, source, and drain, allowing the device to be electrically tested.
+5.8 Electrical Characterization
+Purpose: Demonstrate NMOS behavior (gate-controlled channel conduction) and validate junction properties. 
+Description:
+	•	Check basic continuity/isolation of G/S/D/B nodes.
+	•	Measure source-drain conduction vs gate bias (transfer-like behavior).
+	•	Measure source-drain behavior under varying drain bias (output-like behavior), with current compliance.
+	•	Validate pn junction behavior between each well and substrate (diode-like/photovoltaic response under illumination as a simple check).
+Expected Result: 
+
+
+
+Final Expected Result from Sam Zeloof (26:23)
+Notes:
+	•	Following the above procedure will result in a device that exhibits basic n-channel MOSFET capabilities, where applying a positive gate voltage increases conduction between source and drain. 
+	•	The relatively weak turn-on and high leakage demonstrated are expected because the gate oxide is thicker than intended, which increases the threshold voltage of the device and reduces electric field coupling into the channel. 
+	•	Non-ideal oxide quality and contamination from wet processing will likely contribute to leakage currents and poor on/off ratio.
+	•	Gate isolation issues are expected when using metal conductive epoxy and as seen, one gate is shorted while another remains insulating, directly affecting whether field-effect modulation patterns are observable (drain to source current vs gate voltage). 
+
+
+Ideal modulation patterns look like the following Figure below [2]:
+
+Expected ID vs VD
+
+
+References
+
+[1]	S. Zeloof, “Semiconductor Fabrication Basics – DIY Homemade NMOS,” YouTube, Feb. 
+13, 2017. [Online]. Available: https://youtu.be/s1MCi7FliVY. [Accessed: Feb. 20, 2026].
+
+[2]	 Y.-H. Chang, J.-J. Wang, and G.-L. Shen, “Improving Off-State Breakdown Voltage 
+of a Double-Channel AlGaN/GaN HEMT with Air-Bridge Field Plate and Slant Field 
+Plate,” Solid State Electronics Letters, vol. 2, no. 10, pp. 92–97, Dec. 2020, doi: 
+10.1016/j.ssel.2020.10.002.
+
