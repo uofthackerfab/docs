@@ -1,6 +1,8 @@
 # Lithography Stepper
 
-![Laser](../../images/laser.png)
+<p align="center">
+  <img src="../../images/laser.png" style="max-width: 500px; width: 100%; border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="Laser" />
+</p>
 
 *(Currently in the early research phase)*
 

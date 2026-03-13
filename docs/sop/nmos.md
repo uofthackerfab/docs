@@ -1,6 +1,8 @@
 # NMOS Fabrication Standard Operating Procedure (SOP)
 
-![NMOS Steps](../images/nmos%20steps.svg)
+<p align="center">
+  <img src="../images/nmos%20steps.svg" style="max-width: 800px; width: 100%; margin: 20px 0;" alt="NMOS Steps" />
+</p>
 
 This document outlines the step-by-step process for fabricating a baseline N-type MOSFET using Hacker Fab equipment. It is highly influenced by Sam Zeloof's DIY NMOS procedure, optimized for our student-led environment.
 
