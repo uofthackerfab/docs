@@ -1,4 +1,4 @@
-* [Introduction](README.md)
+* [Welcome & onboarding](README.md)
 
 * **SOP**
   * [NMOS Fabrication SOP](sop/nmos.md)
