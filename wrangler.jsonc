@@ -1,8 +1,11 @@
 {
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
-  "name": "hackerfab-docs",
+  "name": "docs",
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./docs"
-  }
+  },
+  "routes": [
+    { "pattern": "docs.hackerfab.ca", "custom_domain": true }
+  ]
 }
