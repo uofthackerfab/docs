@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMD mirror and TIR prism</title>
+<style>
+  :root {
+    --text: #34495e;
+    --muted: #7f8c8d;
+    --line: #dfe2e5;
+    --accent: #fca311;
+    --glass: #e8f1f8;
+    --glass-edge: #9fb7c9;
+    --ok: #2e8b57;
+    --dump: #2c2c2c;
+  }
+  * { box-sizing: border-box; }
+  /* The docs page sizes this iframe to fit, so it never needs its own
+     scrollbar. A scrollbar would narrow the content and change its height. */
+  html, body { margin: 0; }
+  html { overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    background: #fff;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px 18px;
+    margin-bottom: 16px;
+  }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 12px 0 10px; }
+  .controls label { font-size: 13px; color: var(--muted); }
+  input[type=range] { flex: 1 1 200px; accent-color: var(--accent); }
+  button {
+    font: inherit; font-size: 13px; padding: 4px 12px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text);
+  }
+  button[aria-pressed=true] { border-color: var(--accent); background: #fff6e6; }
+  .calc {
+    font-family: "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    background: #f8f8f8;
+    border-radius: 6px;
+    padding: 10px 12px;
+    white-space: pre-wrap;
+    margin: 0;
+  }
+  .verdict { font-weight: 600; margin-top: 8px; font-size: 14px; }
+  .ok { color: var(--ok); }
+  .bad { color: #b03a2e; }
+  .neutral { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- 1. DMD mirror: tilt doubling -->
+<section class="panel" aria-labelledby="dmd-title">
+  <h2 id="dmd-title">1. One DMD mirror</h2>
+  <p class="sub">Light arrives 34° from the chip's normal. Tilting the mirror by α turns the reflected beam by 2α.</p>
+
+  <svg id="dmd" viewBox="0 0 520 290" role="img" aria-label="Diagram of a tilting DMD mirror and its reflected beam"></svg>
+
+  <div class="controls">
+    <button type="button" data-alpha="17">ON (+17°)</button>
+    <button type="button" data-alpha="0">Flat (0°)</button>
+    <button type="button" data-alpha="-17">OFF (−17°)</button>
+    <label for="alpha">tilt α</label>
+    <input id="alpha" type="range" min="-17" max="17" step="1" value="17">
+  </div>
+  <pre class="calc" id="dmd-calc"></pre>
+  <div class="verdict" id="dmd-verdict"></div>
+</section>
+
+<!-- 2. TIR prism air gap -->
+<section class="panel" aria-labelledby="tir-title">
+  <h2 id="tir-title">2. The air gap in a TIR prism</h2>
+  <p class="sub">Glass, a thin air gap, then glass again. Past the critical angle, no light crosses the gap: all of it reflects.</p>
+
+  <svg id="tir" viewBox="0 0 520 290" role="img" aria-label="Diagram of a ray meeting the air gap of a TIR prism"></svg>
+
+  <div class="controls">
+    <button type="button" data-theta="50">Illumination (example, 50°)</button>
+    <button type="button" data-theta="25">Image light (example, 25°)</button>
+    <label for="theta">angle at gap θ</label>
+    <input id="theta" type="range" min="0" max="80" step="1" value="50">
+  </div>
+  <div class="controls">
+    <label for="n">glass index n</label>
+    <input id="n" type="range" min="1.45" max="1.80" step="0.001" value="1.517">
+  </div>
+  <pre class="calc" id="tir-calc"></pre>
+  <div class="verdict" id="tir-verdict"></div>
+</section>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg"
+  const rad = (d) => (d * Math.PI) / 180
+  const deg = (r) => (r * 180) / Math.PI
+  const fmt = (x, d = 1) => (Math.abs(x) < 0.05 ? 0 : x).toFixed(d)
+  const signed = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x) + "°"
+
+  function el(name, attrs, parent) {
+    const e = document.createElementNS(NS, name)
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v)
+    if (parent) parent.appendChild(e)
+    return e
+  }
+  function text(parent, x, y, s, attrs = {}) {
+    const t = el("text", { x, y, "font-size": 12, fill: "#7f8c8d", ...attrs }, parent)
+    t.textContent = s
+    return t
+  }
+  function defs(svg, id, color) {
+    const d = el("defs", {}, svg)
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 11, markerHeight: 11, markerUnits: "userSpaceOnUse", orient: "auto-start-reverse" }, d)
+    el("path", { d: "M0,0 L10,5 L0,10 z", fill: color }, m)
+  }
+  // Direction for an angle measured from "straight up", positive to the right.
+  const dir = (a) => [Math.sin(rad(a)), -Math.cos(rad(a))]
+
+  /* ---------- Panel 1: DMD ---------- */
+  const dmd = document.getElementById("dmd")
+  const alphaInput = document.getElementById("alpha")
+  const ILLUM = 34
+
+  function drawDmd(alpha) {
+    dmd.innerHTML = ""
+    defs(dmd, "arrow", "#fca311")
+    const P = [260, 228]
+    const reflected = 2 * alpha - ILLUM
+
+    // Projection lens straight up, light dump far to the left.
+    el("ellipse", { cx: 260, cy: 26, rx: 46, ry: 9, fill: "#e8f1f8", stroke: "#9fb7c9" }, dmd)
+    text(dmd, 206, 30, "projection lens (0°)", { "text-anchor": "end" })
+    const [dx, dy] = dir(-68)
+    const D = [P[0] + dx * 205, P[1] + dy * 205]
+    el("rect", { x: D[0] - 16, y: D[1] - 16, width: 32, height: 32, rx: 3, fill: "#2c2c2c", transform: `rotate(-68 ${D[0]} ${D[1]})` }, dmd)
+    text(dmd, D[0] - 30, D[1] + 34, "light dump (−68°)")
+
+    // Chip and its normal.
+    el("rect", { x: 170, y: 244, width: 180, height: 14, rx: 2, fill: "#d5d8dc" }, dmd)
+    text(dmd, 172, 276, "DMD chip")
+    el("line", { x1: P[0], y1: P[1], x2: P[0], y2: 40, stroke: "#bdc3c7", "stroke-dasharray": "4 4" }, dmd)
+    text(dmd, 266, 120, "chip normal")
+
+    // Mirror, tilted by alpha, and its own normal.
+    const t = [Math.cos(rad(alpha)), Math.sin(rad(alpha))]
+    el("line", { x1: P[0] - t[0] * 52, y1: P[1] - t[1] * 52, x2: P[0] + t[0] * 52, y2: P[1] + t[1] * 52, stroke: "#34495e", "stroke-width": 5, "stroke-linecap": "round" }, dmd)
+    const [nx, ny] = dir(alpha)
+    el("line", { x1: P[0], y1: P[1], x2: P[0] + nx * 60, y2: P[1] + ny * 60, stroke: "#34495e", "stroke-dasharray": "2 3" }, dmd)
+
+    // Incoming beam (from upper right) and reflected beam.
+    const [ix, iy] = dir(ILLUM)
+    el("line", { x1: P[0] + ix * 215, y1: P[1] + iy * 215, x2: P[0] + ix * 6, y2: P[1] + iy * 6, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow)" }, dmd)
+    text(dmd, P[0] + ix * 215 + 10, P[1] + iy * 215 + 14, "illumination (34°)")
+    const [rx, ry] = dir(reflected)
+    el("line", { x1: P[0], y1: P[1], x2: P[0] + rx * 190, y2: P[1] + ry * 190, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow)" }, dmd)
+
+    // Calculation.
+    document.getElementById("dmd-calc").textContent =
+      `mirror normal is tilted by α        α = ${signed(alpha)}\n` +
+      `incidence on the mirror             ${ILLUM}° − α = ${ILLUM - alpha}°\n` +
+      `reflection mirrors that angle       α − (${ILLUM}° − α) = 2α − ${ILLUM}°\n` +
+      `reflected beam                      2 × (${signed(alpha)}) − ${ILLUM}° = ${signed(reflected)}`
+
+    const v = document.getElementById("dmd-verdict")
+    if (reflected === 0) { v.textContent = "Straight up the chip normal, into the projection lens. The pixel is bright."; v.className = "verdict ok" }
+    else if (reflected <= -60) { v.textContent = "Far off to the side, into the light dump. The pixel is dark."; v.className = "verdict bad" }
+    else { v.textContent = "Off to the side: it misses both the lens and the light dump."; v.className = "verdict neutral" }
+
+    document.querySelectorAll("[data-alpha]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.alpha === alpha)))
+  }
+  alphaInput.addEventListener("input", () => drawDmd(+alphaInput.value))
+  document.querySelectorAll("[data-alpha]").forEach((b) => b.addEventListener("click", () => { alphaInput.value = b.dataset.alpha; drawDmd(+b.dataset.alpha) }))
+
+  /* ---------- Panel 2: TIR ---------- */
+  const tir = document.getElementById("tir")
+  const thetaInput = document.getElementById("theta")
+  const nInput = document.getElementById("n")
+
+  function drawTir() {
+    const theta = +thetaInput.value
+    const n = +nInput.value
+    tir.innerHTML = ""
+    defs(tir, "arrow2", "#fca311")
+    const GAP_TOP = 132, GAP_BOT = 158, X = 260
+    const critical = deg(Math.asin(1 / n))
+    const sinT = n * Math.sin(rad(theta))
+    const tirHappens = sinT > 1
+
+    // Glass, air gap (thickness exaggerated), glass.
+    el("rect", { x: 0, y: 0, width: 520, height: GAP_TOP, fill: "#e8f1f8" }, tir)
+    el("rect", { x: 0, y: GAP_BOT, width: 520, height: 290 - GAP_BOT, fill: "#e8f1f8" }, tir)
+    el("line", { x1: 0, y1: GAP_TOP, x2: 520, y2: GAP_TOP, stroke: "#9fb7c9" }, tir)
+    el("line", { x1: 0, y1: GAP_BOT, x2: 520, y2: GAP_BOT, stroke: "#9fb7c9" }, tir)
+    text(tir, 10, 20, `glass, n = ${n.toFixed(3)}`)
+    text(tir, 10, GAP_TOP + 17, "air gap, n = 1 (drawn thicker than real)")
+    text(tir, 10, 280, "glass")
+
+    // Normal and critical angle guide.
+    el("line", { x1: X, y1: 20, x2: X, y2: 280, stroke: "#bdc3c7", "stroke-dasharray": "4 4" }, tir)
+    const [cx, cy] = dir(-critical)
+    el("line", { x1: X, y1: GAP_TOP, x2: X + cx * 125, y2: GAP_TOP + cy * 125, stroke: "#b03a2e", "stroke-dasharray": "3 4" }, tir)
+    text(tir, X + cx * 62 + 10, GAP_TOP + cy * 62, `critical ${fmt(critical)}°`, { fill: "#b03a2e" })
+
+    // Incoming ray, travelling down-right through the top glass.
+    const [ix, iy] = dir(-theta)
+    el("line", { x1: X + ix * 150, y1: GAP_TOP + iy * 150, x2: X, y2: GAP_TOP, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow2)" }, tir)
+
+    if (tirHappens) {
+      const [rx, ry] = dir(theta)
+      el("line", { x1: X, y1: GAP_TOP, x2: X + rx * 150, y2: GAP_TOP + ry * 150, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow2)" }, tir)
+      text(tir, X + rx * 150, GAP_TOP + ry * 150 - 8, "100% reflected", { "text-anchor": "middle", fill: "#34495e" })
+    } else {
+      // Refract into the gap, then back into glass at the original angle.
+      const t = deg(Math.asin(sinT))
+      const dxGap = Math.tan(rad(t)) * (GAP_BOT - GAP_TOP)
+      el("line", { x1: X, y1: GAP_TOP, x2: X + dxGap, y2: GAP_BOT, stroke: "#fca311", "stroke-width": 3 }, tir)
+      const len = 120
+      el("line", { x1: X + dxGap, y1: GAP_BOT, x2: X + dxGap + Math.sin(rad(theta)) * len, y2: GAP_BOT + Math.cos(rad(theta)) * len, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow2)" }, tir)
+      text(tir, X + dxGap + Math.sin(rad(theta)) * len + 6, GAP_BOT + Math.cos(rad(theta)) * len - 6, "passes through")
+    }
+
+    const lines = [
+      `critical angle      θc = arcsin(1 / n) = arcsin(1 / ${n.toFixed(3)}) = ${fmt(critical)}°`,
+      `Snell at the gap    sin θair = n × sin θ = ${n.toFixed(3)} × sin ${theta}° = ${sinT.toFixed(3)}`,
+    ]
+    if (tirHappens) lines.push(`                    ${sinT.toFixed(3)} > 1, so there is no angle in the air: total internal reflection`)
+    else lines.push(`                    θair = arcsin(${sinT.toFixed(3)}) = ${fmt(deg(Math.asin(sinT)))}°, then back to ${theta}° in the next glass`)
+    document.getElementById("tir-calc").textContent = lines.join("\n")
+
+    const v = document.getElementById("tir-verdict")
+    if (tirHappens) { v.textContent = `${theta}° is steeper than ${fmt(critical)}°: the gap acts as a perfect mirror. This is how the illumination is folded down onto the DMD.`; v.className = "verdict ok" }
+    else { v.textContent = `${theta}° is below ${fmt(critical)}°: the light crosses the gap. This is how the ON-mirror image gets out to the lens.`; v.className = "verdict ok" }
+
+    document.querySelectorAll("[data-theta]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.theta === theta)))
+  }
+  thetaInput.addEventListener("input", drawTir)
+  nInput.addEventListener("input", drawTir)
+  document.querySelectorAll("[data-theta]").forEach((b) => b.addEventListener("click", () => { thetaInput.value = b.dataset.theta; drawTir() }))
+
+  drawDmd(+alphaInput.value)
+  drawTir()
+
+  // Tell the docs page how tall this widget is, so its iframe fits exactly.
+  // Measure the content itself, not the scroll height: scroll height never
+  // drops below the iframe's current height, so the iframe could only grow.
+  const report = () => parent.postMessage({ type: "hf-widget-height", height: Math.ceil(document.body.getBoundingClientRect().height) }, "*")
+  new ResizeObserver(report).observe(document.body)
+  report()
+</script>
+</body>
+</html>
