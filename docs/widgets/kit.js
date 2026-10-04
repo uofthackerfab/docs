@@ -23,6 +23,16 @@ function arrowMarker(svg, id, color) {
   el("path", { d: "M0,0 L10,5 L0,10 z", fill: color }, m)
 }
 
+// Render worked calculations as LaTeX. Each row is "label & expression";
+// rows are aligned on the "&".
+function renderMath(target, rows) {
+  const tex = "\\begin{aligned}" + rows.join(" \\\\[3pt] ") + "\\end{aligned}"
+  katex.render(tex, target, { displayMode: true, throwOnError: false })
+}
+
+// Format a number with a proper minus sign for LaTeX.
+const texNum = (x, digits) => (x < 0 ? "-" : "") + Math.abs(x).toFixed(digits)
+
 // Mark the matching preset button as pressed.
 function pressPresets(selector, isActive) {
   document.querySelectorAll(selector).forEach((b) => b.setAttribute("aria-pressed", String(isActive(b))))

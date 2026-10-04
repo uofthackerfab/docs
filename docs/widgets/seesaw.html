@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The seesaw: magnification against cone angle</title>
 <link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 </head>
 <body>
 <section class="panel" aria-labelledby="t">
@@ -32,10 +33,11 @@
     <input id="sup" type="range" min="0.20" max="0.29" step="0.01" value="0.27">
     <output id="sup-out"></output>
   </div>
-  <pre class="calc" id="calc"></pre>
+  <div class="calc" id="calc"></div>
   <div class="verdict" id="verdict"></div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="kit.js"></script>
 <script>
   const M_LO = 0.05, M_HI = 100, NA_LO = 0.002, NA_HI = 0.5
@@ -84,10 +86,12 @@
     document.getElementById("m-out").textContent = M < 1 ? M.toFixed(2) : M.toFixed(0)
     document.getElementById("na-out").textContent = naImg.toFixed(3)
     document.getElementById("sup-out").textContent = naSup.toFixed(2)
-    document.getElementById("calc").textContent =
-      `acceptance at DMD   NA = |M| × NA_image = ${M < 1 ? M.toFixed(2) : M.toFixed(0)} × ${naImg.toFixed(3)} = ${naAcc.toFixed(4)}\n` +
-      `light caught        η = (NA_accept / NA_supply)² = (${naAcc.toFixed(4)} / ${naSup.toFixed(2)})² = ${(eta * 100).toFixed(eta < 0.1 ? 2 : 0)}%` +
-      (naAcc >= naSup ? `\n                    the lens's cone is wider than the supply, so it catches all of it` : "")
+    const rows = [
+      `\\text{acceptance at DMD} &\\quad \\text{NA}_\\text{accept} = |M|\\,\\text{NA}_\\text{image} = ${M < 1 ? M.toFixed(2) : M.toFixed(0)} \\times ${naImg.toFixed(3)} = ${naAcc.toFixed(4)}`,
+      `\\text{light caught} &\\quad \\eta = \\left(\\frac{\\text{NA}_\\text{accept}}{\\text{NA}_\\text{supply}}\\right)^{2} = \\left(\\frac{${naAcc.toFixed(4)}}{${naSup.toFixed(2)}}\\right)^{2} = ${(eta * 100).toFixed(eta < 0.1 ? 2 : 0)}\\%`,
+    ]
+    if (naAcc >= naSup) rows.push(`&\\quad \\text{the lens's cone is wider than the supply, so it catches all of it}`)
+    renderMath(document.getElementById("calc"), rows)
 
     document.getElementById("verdict").textContent = eta >= 1
       ? "Nothing is wasted: the lens catches every ray the DMD sends."

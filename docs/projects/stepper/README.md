@@ -16,34 +16,38 @@ A DMD (digital micromirror device) is a chip covered in tiny mirrors, one per pi
 
 ### Tilt doubling
 
-Tilting a mirror by α turns the reflected beam by 2α. For a DMD whose mirrors rest at α = ±17°, the illumination is brought in at 2 × 17° = 34° from the chip's normal. The reflected beam's centre is then at 2α − 34°:
+Tilting a mirror by $\alpha$ turns the reflected beam by $2\alpha$. For a DMD whose mirrors rest at $\alpha = \pm 17^\circ$, the illumination is brought in at $2 \times 17^\circ = 34^\circ$ from the chip's normal. The reflected beam's centre is then at
 
-| Mirror state | Tilt α | Reflected beam: 2α − 34° | Where it goes |
+$$
+\theta_\text{out} = 2\alpha - 34^\circ
+$$
+
+| Mirror state | Tilt $\alpha$ | Reflected beam $2\alpha - 34^\circ$ | Where it goes |
 |---|---|---|---|
-| ON | +17° | 34° − 34° = **0°** | Straight out along the normal, into the projection lens |
-| Flat | 0° | **−34°** | Off to the side, missing both the lens and the absorber |
-| OFF | −17° | −34° − 34° = **−68°** | Into a black absorber inside the module |
+| ON | $+17^\circ$ | $34^\circ - 34^\circ = \mathbf{0^\circ}$ | Straight out along the normal, into the projection lens |
+| Flat | $0^\circ$ | $\mathbf{-34^\circ}$ | Off to the side, missing both the lens and the absorber |
+| OFF | $-17^\circ$ | $-34^\circ - 34^\circ = \mathbf{-68^\circ}$ | Into a black absorber inside the module |
 
 ### The TIR prism
 
-The illumination comes in 34° off the normal, while the image leaves straight up the normal. Both paths share the space right in front of the chip, so something has to bring the light in without blocking the way out. That is the job of a TIR (total internal reflection) prism.
+The illumination comes in $34^\circ$ off the normal, while the image leaves straight up the normal. Both paths share the space right in front of the chip, so something has to bring the light in without blocking the way out. That is the job of a TIR (total internal reflection) prism.
 
 When light inside glass meets air, it bends away from the normal. Snell's law gives the angle in the air:
 
-```
-n_glass × sin(θ_glass) = n_air × sin(θ_air)
-```
+$$
+n_\text{glass} \sin\theta_\text{glass} = n_\text{air} \sin\theta_\text{air}
+$$
 
-Past a certain angle, the critical angle, sin(θ_air) would have to be greater than 1. No light gets out, and 100% of it reflects. For ordinary optical glass (BK7, n ≈ 1.517):
+Past a certain angle, the critical angle, $\sin\theta_\text{air}$ would have to be greater than 1. No light gets out, and 100% of it reflects. For ordinary optical glass (BK7, $n \approx 1.517$):
 
-```
-θc = arcsin(n_air / n_glass) = arcsin(1 / 1.517) ≈ 41°
-```
+$$
+\theta_c = \arcsin\frac{n_\text{air}}{n_\text{glass}} = \arcsin\frac{1}{1.517} \approx 41^\circ
+$$
 
 A TIR prism is two glass prisms with a thin air gap between them.
 
-- **Illumination in.** The illumination hits the gap steeper than 41°, so the gap acts as a perfect mirror and reflects it down onto the DMD.
-- **Image out.** The light coming back up from ON mirrors hits the same gap closer to perpendicular, below 41°, so it passes straight through toward the output.
+- **Illumination in.** The illumination hits the gap steeper than $41^\circ$, so the gap acts as a perfect mirror and reflects it down onto the DMD.
+- **Image out.** The light coming back up from ON mirrors hits the same gap closer to perpendicular, below $41^\circ$, so it passes straight through toward the output.
 
 One component both folds the illumination in and lets the image out. Some DLP modules use a variant of this design, but the principle is the same.
 

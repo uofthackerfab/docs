@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blur and depth of focus</title>
 <link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 </head>
 <body>
 <section class="panel" aria-labelledby="t">
@@ -22,10 +23,11 @@
     <input id="na" type="range" min="0.05" max="0.5" step="0.01" value="0.25">
     <output id="na-out"></output>
   </div>
-  <pre class="calc" id="calc"></pre>
+  <div class="calc" id="calc"></div>
   <div class="verdict" id="verdict"></div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="kit.js"></script>
 <script>
   const LAMBDA = 0.41          // µm, our 410 nm LEDs
@@ -87,9 +89,10 @@
     label(fig, CX, TOP - 6, `cone ${(theta * 180 / Math.PI).toFixed(1)}°`, { "text-anchor": "middle" })
 
     document.getElementById("na-out").textContent = na.toFixed(2)
-    document.getElementById("calc").textContent =
-      `spot size        d = 1.22 λ / NA = 1.22 × 0.41 µm / ${na.toFixed(2)} = ${d.toFixed(2)} µm  (${(d / PIXEL).toFixed(1)} wafer pixels)\n` +
-      `depth of focus   Δz = ± λ / (2 NA²) = ± 0.41 / (2 × ${na.toFixed(2)}²) = ± ${dof.toFixed(1)} µm`
+    renderMath(document.getElementById("calc"), [
+      `\\text{spot size} &\\quad d = \\frac{1.22\\,\\lambda}{\\text{NA}} = \\frac{1.22 \\times 0.41\\ \\mu\\text{m}}{${na.toFixed(2)}} = ${d.toFixed(2)}\\ \\mu\\text{m} \\quad (${(d / PIXEL).toFixed(1)}\\ \\text{wafer pixels})`,
+      `\\text{depth of focus} &\\quad \\Delta z = \\pm\\frac{\\lambda}{2\\,\\text{NA}^{2}} = \\pm\\frac{0.41}{2 \\times ${na.toFixed(2)}^{2}} = \\pm ${dof.toFixed(1)}\\ \\mu\\text{m}`,
+    ])
 
     document.getElementById("verdict").textContent =
       `The smallest reliable line is about ${d.toFixed(1)} µm, roughly ${Math.round(d / PIXEL)} mirrors wide, and the Z stage must hold the wafer within ±${dof.toFixed(1)} µm.`

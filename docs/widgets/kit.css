@@ -30,8 +30,10 @@ button {
 }
 button[aria-pressed=true] { border-color: var(--accent); background: #fff6e6; }
 .calc {
-  font-family: "Roboto Mono", Menlo, Consolas, monospace;
-  font-size: 13px; background: #f8f8f8; border-radius: 6px;
-  padding: 10px 12px; white-space: pre-wrap; margin: 0;
+  background: #f8f8f8; border-radius: 6px;
+  padding: 8px 12px; margin: 0; overflow-x: auto; overflow-y: hidden;
 }
+.calc .katex { font-size: 1.02em; }
+.calc .katex-display { margin: 0; text-align: left; }
+.calc .katex-display > .katex { text-align: left; }
 .verdict { font-weight: 600; margin-top: 8px; font-size: 14px; color: #2e8b57; }

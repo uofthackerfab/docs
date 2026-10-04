@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DMD mirror and TIR prism</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
   :root {
     --text: #34495e;
@@ -45,14 +46,16 @@
   }
   button[aria-pressed=true] { border-color: var(--accent); background: #fff6e6; }
   .calc {
-    font-family: "Roboto Mono", Menlo, Consolas, monospace;
-    font-size: 13px;
     background: #f8f8f8;
     border-radius: 6px;
-    padding: 10px 12px;
-    white-space: pre-wrap;
+    padding: 8px 12px;
     margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
+  .calc .katex { font-size: 1.02em; }
+  .calc .katex-display { margin: 0; text-align: left; }
+  .calc .katex-display > .katex { text-align: left; }
   .verdict { font-weight: 600; margin-top: 8px; font-size: 14px; }
   .ok { color: var(--ok); }
   .bad { color: #b03a2e; }
@@ -75,7 +78,7 @@
     <label for="alpha">tilt α</label>
     <input id="alpha" type="range" min="-17" max="17" step="1" value="17">
   </div>
-  <pre class="calc" id="dmd-calc"></pre>
+  <div class="calc" id="dmd-calc"></div>
   <div class="verdict" id="dmd-verdict"></div>
 </section>
 
@@ -96,16 +99,23 @@
     <label for="n">glass index n</label>
     <input id="n" type="range" min="1.45" max="1.80" step="0.001" value="1.517">
   </div>
-  <pre class="calc" id="tir-calc"></pre>
+  <div class="calc" id="tir-calc"></div>
   <div class="verdict" id="tir-verdict"></div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script>
   const NS = "http://www.w3.org/2000/svg"
   const rad = (d) => (d * Math.PI) / 180
   const deg = (r) => (r * 180) / Math.PI
   const fmt = (x, d = 1) => (Math.abs(x) < 0.05 ? 0 : x).toFixed(d)
   const signed = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x) + "°"
+  // LaTeX versions for the worked calculations, rendered with KaTeX.
+  const texDeg = (x) => (x > 0 ? "+" : x < 0 ? "-" : "") + Math.abs(x) + "^\\circ"
+  function renderMath(target, rows) {
+    const tex = "\\begin{aligned}" + rows.join(" \\\\[3pt] ") + "\\end{aligned}"
+    katex.render(tex, target, { displayMode: true, throwOnError: false })
+  }
 
   function el(name, attrs, parent) {
     const e = document.createElementNS(NS, name)
@@ -165,11 +175,12 @@
     el("line", { x1: P[0], y1: P[1], x2: P[0] + rx * 190, y2: P[1] + ry * 190, stroke: "#fca311", "stroke-width": 3, "marker-end": "url(#arrow)" }, dmd)
 
     // Calculation.
-    document.getElementById("dmd-calc").textContent =
-      `mirror normal is tilted by α        α = ${signed(alpha)}\n` +
-      `incidence on the mirror             ${ILLUM}° − α = ${ILLUM - alpha}°\n` +
-      `reflection mirrors that angle       α − (${ILLUM}° − α) = 2α − ${ILLUM}°\n` +
-      `reflected beam                      2 × (${signed(alpha)}) − ${ILLUM}° = ${signed(reflected)}`
+    renderMath(document.getElementById("dmd-calc"), [
+      `\\text{mirror tilt} &\\quad \\alpha = ${texDeg(alpha)}`,
+      `\\text{incidence on the mirror} &\\quad ${ILLUM}^\\circ - \\alpha = ${ILLUM - alpha}^\\circ`,
+      `\\text{reflection mirrors that angle} &\\quad \\alpha - (${ILLUM}^\\circ - \\alpha) = 2\\alpha - ${ILLUM}^\\circ`,
+      `\\text{reflected beam} &\\quad 2 \\times (${texDeg(alpha)}) - ${ILLUM}^\\circ = ${reflected === 0 ? "0^\\circ" : texDeg(reflected)}`,
+    ])
 
     const v = document.getElementById("dmd-verdict")
     if (reflected === 0) { v.textContent = "Straight up the chip normal, into the projection lens. The pixel is bright."; v.className = "verdict ok" }
@@ -231,13 +242,13 @@
       text(tir, X + dxGap - Math.sin(rad(theta)) * len - 6, GAP_BOT + Math.cos(rad(theta)) * len - 6, "passes through", { "text-anchor": "end" })
     }
 
-    const lines = [
-      `critical angle      θc = arcsin(1 / n) = arcsin(1 / ${n.toFixed(3)}) = ${fmt(critical)}°`,
-      `Snell at the gap    sin θair = n × sin θ = ${n.toFixed(3)} × sin ${theta}° = ${sinT.toFixed(3)}`,
+    const rows = [
+      `\\text{critical angle} &\\quad \\theta_c = \\arcsin\\frac{1}{n} = \\arcsin\\frac{1}{${n.toFixed(3)}} = ${fmt(critical)}^\\circ`,
+      `\\text{Snell at the gap} &\\quad \\sin\\theta_\\text{air} = n \\sin\\theta = ${n.toFixed(3)} \\times \\sin ${theta}^\\circ = ${sinT.toFixed(3)}`,
     ]
-    if (tirHappens) lines.push(`                    ${sinT.toFixed(3)} > 1, so there is no angle in the air: total internal reflection`)
-    else lines.push(`                    θair = arcsin(${sinT.toFixed(3)}) = ${fmt(deg(Math.asin(sinT)))}°, then back to ${theta}° in the next glass`)
-    document.getElementById("tir-calc").textContent = lines.join("\n")
+    if (tirHappens) rows.push(`&\\quad ${sinT.toFixed(3)} > 1 \\Rightarrow \\text{no angle in the air: total internal reflection}`)
+    else rows.push(`&\\quad \\theta_\\text{air} = \\arcsin ${sinT.toFixed(3)} = ${fmt(deg(Math.asin(sinT)))}^\\circ \\text{, then back to } ${theta}^\\circ \\text{ in the next glass}`)
+    renderMath(document.getElementById("tir-calc"), rows)
 
     const v = document.getElementById("tir-verdict")
     if (tirHappens) { v.textContent = `${theta}° is steeper than ${fmt(critical)}°: the gap acts as a perfect mirror. This is how the illumination is folded down onto the DMD.`; v.className = "verdict ok" }
