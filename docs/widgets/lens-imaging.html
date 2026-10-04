@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A lens as a 2×2 map</title>
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<section class="panel" aria-labelledby="t">
+  <h2 id="t">A lens is a 2×2 linear map</h2>
+  <p class="sub">A thin lens, f = 16 mm, the same as our objective. Move the object and every ray from its tip still meets at one point: that point is the image.</p>
+
+  <svg id="fig" viewBox="0 0 560 250" role="img" aria-label="Ray diagram of an object, a lens and its image"></svg>
+
+  <div class="controls">
+    <button type="button" data-preset="build">Our build (s = 176 mm)</button>
+    <button type="button" data-preset="projector">Wall projector (s = 16.16 mm)</button>
+  </div>
+  <div class="controls">
+    <label for="s">object distance s</label>
+    <input id="s" type="range" min="0" max="1000" step="1">
+    <output id="s-out"></output>
+  </div>
+  <pre class="calc" id="calc"></pre>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<script src="kit.js"></script>
+<script>
+  const F = 16
+  const S_MIN = 16.1, S_MAX = 400
+  const fig = document.getElementById("fig")
+  const slider = document.getElementById("s")
+
+  // Distances are drawn compressed (they range from 16 mm to 1.6 m), and
+  // heights exaggerated. The ray segments still meet exactly where they should.
+  const LENS_X = 300, AXIS_Y = 125, OBJ_H = 38, RIM = 70
+  const toPxLeft = (d) => 270 * (d / (d + 60))
+  const toPxRight = (d) => 240 * (d / (d + 25))
+
+  function draw(s) {
+    const sp = 1 / (1 / F - 1 / s)
+    const M = -sp / s
+    const A = 1 - sp / F, B = s + sp - (s * sp) / F, C = -1 / F, D = 1 - s / F
+
+    fig.innerHTML = ""
+    arrowMarker(fig, "a", "#34495e")
+    const ox = LENS_X - toPxLeft(s)
+    const ix = LENS_X + toPxRight(sp)
+    const imgH = Math.max(-108, Math.min(108, M * OBJ_H))
+    const clipped = Math.abs(M * OBJ_H) > 108
+
+    // Axis, lens, focal points.
+    el("line", { x1: 10, y1: AXIS_Y, x2: 550, y2: AXIS_Y, stroke: "#dfe2e5" }, fig)
+    el("ellipse", { cx: LENS_X, cy: AXIS_Y, rx: 7, ry: RIM, fill: "#e8f1f8", stroke: "#9fb7c9" }, fig)
+    label(fig, LENS_X, AXIS_Y - RIM - 8, "lens, f = 16 mm", { "text-anchor": "middle" })
+    for (const x of [LENS_X - toPxLeft(F), LENS_X + toPxRight(F)]) el("circle", { cx: x, cy: AXIS_Y, r: 2.5, fill: "#7f8c8d" }, fig)
+
+    // Object and image arrows.
+    el("line", { x1: ox, y1: AXIS_Y, x2: ox, y2: AXIS_Y - OBJ_H, stroke: "#34495e", "stroke-width": 2.5, "marker-end": "url(#a)" }, fig)
+    label(fig, ox, AXIS_Y + 16, "object", { "text-anchor": "middle" })
+    el("line", { x1: ix, y1: AXIS_Y, x2: ix, y2: AXIS_Y - imgH, stroke: "#34495e", "stroke-width": 2.5, "marker-end": "url(#a)" }, fig)
+    label(fig, ix, AXIS_Y + (imgH < 0 ? -10 : 16), clipped ? "image (taller than shown)" : "image", { "text-anchor": "middle" })
+
+    // Three rays from the object tip: parallel, through the centre, to the rim.
+    const tip = [ox, AXIS_Y - OBJ_H], img = [ix, AXIS_Y - imgH]
+    for (const hitY of [AXIS_Y - OBJ_H, AXIS_Y, AXIS_Y + RIM - 6]) {
+      el("polyline", { points: `${tip} ${LENS_X},${hitY} ${img}`, fill: "none", stroke: "#fca311", "stroke-width": 1.6 }, fig)
+    }
+    label(fig, 10, 244, "Distances compressed and heights exaggerated so both ends fit.")
+
+    document.getElementById("s-out").textContent = `${s.toFixed(s < 20 ? 2 : 0)} mm`
+    document.getElementById("calc").textContent =
+      `thin lens       1/s′ = 1/f − 1/s = 1/${F} − 1/${s.toFixed(s < 20 ? 2 : 0)}  →  s′ = ${sp.toFixed(sp < 100 ? 1 : 0)} mm\n` +
+      `magnification   M = −s′/s = ${M.toFixed(Math.abs(M) < 1 ? 3 : 1)}\n` +
+      `system matrix   [A B; C D] = [${A.toFixed(3)}  ${Math.abs(B) < 1e-6 ? "0" : B.toFixed(3)} ; ${C.toFixed(4)}  ${D.toFixed(2)}]\n` +
+      `                B = 0, so the landing height does not depend on the ray's angle`
+
+    const v = document.getElementById("verdict")
+    v.textContent = Math.abs(M) < 1
+      ? `The picture is ${(1 / Math.abs(M)).toFixed(1)}× smaller and upside down.${Math.abs(s - 176) < 1 ? " This is our build." : ""}`
+      : `The picture is ${Math.abs(M).toFixed(0)}× bigger and upside down.${Math.abs(M) > 90 ? " This is what a projector lens does." : ""}`
+
+    pressPresets("[data-preset]", (b) => (b.dataset.preset === "build" ? Math.abs(s - 176) < 1 : Math.abs(s - 16.16) < 0.01))
+  }
+
+  const fromSlider = () => logToValue(+slider.value, S_MIN, S_MAX)
+  slider.addEventListener("input", () => draw(fromSlider()))
+  const PRESETS = { build: 176, projector: 16.16 }
+  document.querySelectorAll("[data-preset]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const s = PRESETS[b.dataset.preset]
+      slider.value = valueToLog(s, S_MIN, S_MAX)
+      draw(s)
+    })
+  )
+  slider.value = valueToLog(176, S_MIN, S_MAX)
+  draw(176)
+  reportHeight()
+</script>
+</body>
+</html>

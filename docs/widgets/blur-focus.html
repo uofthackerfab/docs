@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blur and depth of focus</title>
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<section class="panel" aria-labelledby="t">
+  <h2 id="t">Even a perfect lens blurs</h2>
+  <p class="sub">A point images to an Airy spot. A wider cone (bigger NA) makes the spot smaller, but the focus window shrinks with NA².</p>
+
+  <svg id="fig" viewBox="0 0 560 210" role="img" aria-label="Airy spot profile against the wafer pixel grid, and the depth of focus"></svg>
+
+  <div class="controls">
+    <button type="button" data-na="0.25">Our objective (NA 0.25)</button>
+    <button type="button" data-na="0.1">NA 0.10</button>
+  </div>
+  <div class="controls">
+    <label for="na">NA at the wafer</label>
+    <input id="na" type="range" min="0.05" max="0.5" step="0.01" value="0.25">
+    <output id="na-out"></output>
+  </div>
+  <pre class="calc" id="calc"></pre>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<script src="kit.js"></script>
+<script>
+  const LAMBDA = 0.41          // µm, our 410 nm LEDs
+  const PIXEL = 0.54           // µm, one DMD mirror after 10× reduction
+  const fig = document.getElementById("fig")
+  const naS = document.getElementById("na")
+
+  // Bessel J1 by direct integration: J1(x) = (1/π) ∫ cos(τ − x sin τ) dτ over [0, π].
+  function j1(x) {
+    const N = 120
+    let s = 0
+    for (let i = 0; i < N; i++) {
+      const t = ((i + 0.5) * Math.PI) / N
+      s += Math.cos(t - x * Math.sin(t))
+    }
+    return s / N
+  }
+  const airy = (r, na) => {
+    const x = (2 * Math.PI * na * Math.abs(r)) / LAMBDA
+    return x < 1e-6 ? 1 : (2 * j1(x) / x) ** 2
+  }
+
+  function draw() {
+    const na = +naS.value
+    const d = (1.22 * LAMBDA) / na
+    const dof = LAMBDA / (2 * na * na)
+
+    fig.innerHTML = ""
+    // Left: the spot profile across ±5 µm, over the wafer pixel grid.
+    const X0 = 20, W = 330, Y0 = 150, H = 110, R = 5
+    const px = (r) => X0 + ((r + R) / (2 * R)) * W
+    for (let k = -Math.floor(R / PIXEL); k <= Math.floor(R / PIXEL); k++) {
+      el("rect", { x: px(k * PIXEL - PIXEL / 2), y: Y0 + 6, width: (PIXEL / (2 * R)) * W - 1, height: 8, fill: k % 2 ? "#eef0f2" : "#dfe2e5" }, fig)
+    }
+    label(fig, X0, Y0 + 30, `wafer pixels, ${PIXEL} µm each`)
+    let path = ""
+    for (let i = 0; i <= 200; i++) {
+      const r = -R + (2 * R * i) / 200
+      path += `${i ? "L" : "M"}${px(r).toFixed(1)},${(Y0 - H * airy(r, na)).toFixed(1)}`
+    }
+    el("path", { d: path, fill: "none", stroke: "#fca311", "stroke-width": 2 }, fig)
+    el("line", { x1: X0, y1: Y0, x2: X0 + W, y2: Y0, stroke: "#bdc3c7" }, fig)
+    el("line", { x1: px(-d / 2), y1: Y0 - H - 8, x2: px(d / 2), y2: Y0 - H - 8, stroke: "#34495e" }, fig)
+    label(fig, px(0), Y0 - H - 14, `spot ${d.toFixed(2)} µm`, { "text-anchor": "middle", fill: "#34495e" })
+    label(fig, X0, 205, "−5 µm")
+    label(fig, X0 + W, 205, "+5 µm", { "text-anchor": "end" })
+
+    // Right: the converging cone and the depth-of-focus window, on a log height scale.
+    const CX = 470, TOP = 22, BOT = 182
+    const theta = Math.asin(na)
+    const tipY = 102
+    // Cone width follows the real angle: a wider NA draws a wider cone.
+    const halfW = Math.max(4, (tipY - TOP) * Math.tan(theta))
+    el("path", { d: `M${CX - halfW},${TOP} L${CX},${tipY} L${CX + halfW},${TOP}`, fill: "#fca311", "fill-opacity": 0.2, stroke: "#fca311" }, fig)
+    el("path", { d: `M${CX - halfW},${BOT} L${CX},${tipY} L${CX + halfW},${BOT}`, fill: "none", stroke: "#fca311", "stroke-dasharray": "3 3" }, fig)
+    const band = Math.min(70, 12 * Math.log10(1 + dof))
+    el("rect", { x: CX - 80, y: tipY - band, width: 160, height: 2 * band, fill: "#2e8b57", "fill-opacity": 0.12 }, fig)
+    label(fig, CX, BOT + 18, `in focus: ±${dof < 10 ? dof.toFixed(1) : dof.toFixed(0)} µm`, { "text-anchor": "middle", fill: "#2e8b57" })
+    label(fig, CX, TOP - 6, `cone ${(theta * 180 / Math.PI).toFixed(1)}°`, { "text-anchor": "middle" })
+
+    document.getElementById("na-out").textContent = na.toFixed(2)
+    document.getElementById("calc").textContent =
+      `spot size        d = 1.22 λ / NA = 1.22 × 0.41 µm / ${na.toFixed(2)} = ${d.toFixed(2)} µm  (${(d / PIXEL).toFixed(1)} wafer pixels)\n` +
+      `depth of focus   Δz = ± λ / (2 NA²) = ± 0.41 / (2 × ${na.toFixed(2)}²) = ± ${dof.toFixed(1)} µm`
+
+    document.getElementById("verdict").textContent =
+      `The smallest reliable line is about ${d.toFixed(1)} µm, roughly ${Math.round(d / PIXEL)} mirrors wide, and the Z stage must hold the wafer within ±${dof.toFixed(1)} µm.`
+
+    pressPresets("[data-na]", (b) => Math.abs(+b.dataset.na - na) < 0.001)
+  }
+  naS.addEventListener("input", draw)
+  document.querySelectorAll("[data-na]").forEach((b) => b.addEventListener("click", () => { naS.value = b.dataset.na; draw() }))
+  draw()
+  reportHeight()
+</script>
+</body>
+</html>

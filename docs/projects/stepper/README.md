@@ -8,6 +8,8 @@
 
 Our goal is to build a precision optical system for photolithography pattern transfer. This stepper will allow us to project and step-repeat mask patterns onto photoresist-coated wafers, paving the way for smaller feature sizes and more complex integrated circuits than simple contact lithography allows.
 
+> New to the optics? [Stepper optics, from zero](projects/stepper/optics.md) builds up every idea used on this page, one step at a time, with interactive diagrams.
+
 ## How a DMD steers light
 
 A DMD (digital micromirror device) is a chip covered in tiny mirrors, one per pixel. Each mirror tilts to one of two resting angles, ON or OFF. The ON angle sends light into the projection lens and the pixel is bright. The OFF angle sends light into an absorber and the pixel is dark. That is how the stepper turns a digital mask into a pattern of light.

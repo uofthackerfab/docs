@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The seesaw: magnification against cone angle</title>
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<section class="panel" aria-labelledby="t">
+  <h2 id="t">The seesaw: shrink the picture, fatten the cones</h2>
+  <p class="sub">NA at the DMD = |M| × NA at the image. The lens only catches what falls inside that cone; the rest of the DMD's light is lost.</p>
+
+  <svg id="fig" viewBox="0 0 560 230" role="img" aria-label="Supply cone, acceptance cone and image-side cone"></svg>
+
+  <div class="controls">
+    <button type="button" data-preset="build">Our build</button>
+    <button type="button" data-preset="projector">Wall projector</button>
+  </div>
+  <div class="controls">
+    <label for="m">magnification |M|</label>
+    <input id="m" type="range" min="0" max="1000" step="1">
+    <output id="m-out"></output>
+  </div>
+  <div class="controls">
+    <label for="na">NA at the image</label>
+    <input id="na" type="range" min="0" max="1000" step="1">
+    <output id="na-out"></output>
+  </div>
+  <div class="controls">
+    <label for="sup">DMD supply NA</label>
+    <input id="sup" type="range" min="0.20" max="0.29" step="0.01" value="0.27">
+    <output id="sup-out"></output>
+  </div>
+  <pre class="calc" id="calc"></pre>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<script src="kit.js"></script>
+<script>
+  const M_LO = 0.05, M_HI = 100, NA_LO = 0.002, NA_HI = 0.5
+  const fig = document.getElementById("fig")
+  const mS = document.getElementById("m"), naS = document.getElementById("na"), supS = document.getElementById("sup")
+  const deg = (r) => (r * 180) / Math.PI
+
+  // A cone drawn from a tip, opening along +x (dir 1) or -x (dir -1).
+  function cone(x, y, halfDeg, len, dir, attrs) {
+    const t = Math.tan((Math.min(halfDeg, 80) * Math.PI) / 180) * len
+    el("path", { d: `M${x},${y} L${x + dir * len},${y - t} L${x + dir * len},${y + t} Z`, ...attrs }, fig)
+  }
+
+  // Current values. Sliders update them; presets set them exactly, so a
+  // preset's numbers are not rounded by the log slider's steps.
+  let M = 0.1, naImg = 0.25
+
+  function draw() {
+    const naSup = +supS.value
+    const naAcc = Math.min(1, M * naImg)
+    const eta = Math.min(1, (naAcc / naSup) ** 2)
+    const aSup = deg(Math.asin(naSup)), aAcc = deg(Math.asin(naAcc)), aImg = deg(Math.asin(Math.min(naImg, 1)))
+
+    fig.innerHTML = ""
+    const Y = 100
+    // DMD side: one mirror's supply cone (dashed) and the lens's acceptance cone (filled).
+    el("rect", { x: 20, y: Y - 14, width: 6, height: 28, fill: "#d5d8dc" }, fig)
+    label(fig, 10, Y + 34, "one DMD mirror")
+    cone(26, Y, aSup, 200, 1, { fill: "none", stroke: "#7f8c8d", "stroke-dasharray": "4 4" })
+    cone(26, Y, aAcc, 200, 1, { fill: "#fca311", "fill-opacity": 0.35, stroke: "#fca311" })
+    label(fig, 230, Y - 62, `supply ${aSup.toFixed(1)}°`)
+    label(fig, 230, Y + 4, `caught ${aAcc.toFixed(1)}°`, { fill: "#c27c0e" })
+
+    // The lens, then the image-side cone converging onto the wafer/screen.
+    el("ellipse", { cx: 330, cy: Y, rx: 6, ry: 46, fill: "#e8f1f8", stroke: "#9fb7c9" }, fig)
+    cone(540, Y, aImg, 200, -1, { fill: "#fca311", "fill-opacity": 0.35, stroke: "#fca311" })
+    el("rect", { x: 540, y: Y - 14, width: 6, height: 28, fill: "#d5d8dc" }, fig)
+    label(fig, 546, Y + 34, M < 1 ? "wafer" : "screen", { "text-anchor": "end" })
+    label(fig, 352, Y - 62, `image cone ${aImg.toFixed(1)}°`)
+
+    // Collected-light bar.
+    el("rect", { x: 20, y: 196, width: 520, height: 10, rx: 5, fill: "#eef0f2" }, fig)
+    el("rect", { x: 20, y: 196, width: Math.max(2, 520 * eta), height: 10, rx: 5, fill: "#fca311" }, fig)
+    label(fig, 20, 224, `light reaching the ${M < 1 ? "wafer" : "screen"}: ${(eta * 100).toFixed(eta < 0.1 ? 2 : 0)}%`, { "font-size": 11, fill: "#34495e" })
+
+    document.getElementById("m-out").textContent = M < 1 ? M.toFixed(2) : M.toFixed(0)
+    document.getElementById("na-out").textContent = naImg.toFixed(3)
+    document.getElementById("sup-out").textContent = naSup.toFixed(2)
+    document.getElementById("calc").textContent =
+      `acceptance at DMD   NA = |M| × NA_image = ${M < 1 ? M.toFixed(2) : M.toFixed(0)} × ${naImg.toFixed(3)} = ${naAcc.toFixed(4)}\n` +
+      `light caught        η = (NA_accept / NA_supply)² = (${naAcc.toFixed(4)} / ${naSup.toFixed(2)})² = ${(eta * 100).toFixed(eta < 0.1 ? 2 : 0)}%` +
+      (naAcc >= naSup ? `\n                    the lens's cone is wider than the supply, so it catches all of it` : "")
+
+    document.getElementById("verdict").textContent = eta >= 1
+      ? "Nothing is wasted: the lens catches every ray the DMD sends."
+      : `About ${((1 - eta) * 100).toFixed(0)}% of each ON mirror's light misses the lens. No lens design can avoid this: it is the price of shrinking the picture.`
+
+    pressPresets("[data-preset]", (b) => (b.dataset.preset === "build" ? Math.abs(M - 0.1) < 0.005 && Math.abs(naImg - 0.25) < 0.005 : Math.abs(M - 100) < 2 && Math.abs(naImg - 0.003) < 0.0003))
+  }
+
+  function set(m, na) {
+    M = m
+    naImg = na
+    mS.value = valueToLog(m, M_LO, M_HI)
+    naS.value = valueToLog(na, NA_LO, NA_HI)
+    draw()
+  }
+  const PRESETS = { build: [0.1, 0.25], projector: [100, 0.003] }
+  document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => set(...PRESETS[b.dataset.preset])))
+  mS.addEventListener("input", () => { M = logToValue(+mS.value, M_LO, M_HI); draw() })
+  naS.addEventListener("input", () => { naImg = logToValue(+naS.value, NA_LO, NA_HI); draw() })
+  supS.addEventListener("input", draw)
+  set(0.1, 0.25)
+  reportHeight()
+</script>
+</body>
+</html>
